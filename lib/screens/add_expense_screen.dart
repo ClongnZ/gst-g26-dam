@@ -1,3 +1,5 @@
+//import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; //Paquete para formatear fechas
 import '../db/database_helper.dart';
@@ -7,7 +9,7 @@ import '../models/expense.dart';
 class AddExpenseScreen extends StatefulWidget {
   final Expense? expense; //Si es null = agregar gasto, si no = edición de gasto
 
-  AddExpenseScreen({this.expense}); //Constructor que recibe el gasto a editar
+  const AddExpenseScreen({super.key, this.expense}); //Constructor que recibe el gasto a editar
 
   @override
   _AddExpenseScreenState createState() => _AddExpenseScreenState();
@@ -59,12 +61,39 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
       );
 
       //Guarda o actualiza el gasto
-      if (widget.expense == null) {
-        await DatabaseHelper().insertExpense(expense);
-      } else {
-        await DatabaseHelper().updateExpense(expense);
+      try{
+        if(widget.expense == null) {
+          await DatabaseHelper().insertExpense(expense);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gasto guardado exitosamente',),
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+            ),
+            );
+        } else {
+          await DatabaseHelper().updateExpense(expense);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gasto actualizado exitosamente'),
+              duration: Duration(seconds: 2),
+              behavior: SnackBarBehavior.floating,
+              ),
+            );
+        }
+
+        await Future.delayed(Duration(milliseconds: 1500)); //Espera para que el usuario vea el mensaje
+
+        Navigator.pop(context);
+      }catch (e){
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error al guardar el gasto: $e'),
+            duration: Duration(seconds: 3),
+            backgroundColor: Colors.red,
+            ),
+          );
       }
-      Navigator.pop(context); 
     }
   }
 
@@ -146,13 +175,5 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ),
       ),
     );
-  }
-
-  //Limpia los controladores al salir de la pantalla
-  @override
-  void dispose() {
-    _descriptionController.dispose();
-    _amountController.dispose();
-    super.dispose();
   }
 }

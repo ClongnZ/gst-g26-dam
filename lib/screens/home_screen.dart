@@ -6,6 +6,8 @@ import '../db/database_helper.dart';
 import '../models/expense.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
