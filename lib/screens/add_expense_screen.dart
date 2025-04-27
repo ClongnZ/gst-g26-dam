@@ -66,18 +66,28 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
           await DatabaseHelper().insertExpense(expense);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gasto guardado exitosamente',),
+              content: Text('Gasto guardado exitosamente', style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               duration: Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(10),
             ),
             );
         } else {
           await DatabaseHelper().updateExpense(expense);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Gasto actualizado exitosamente'),
+              content: Text('Gasto actualizado exitosamente', style: TextStyle(color: Colors.white)),
+              backgroundColor: Colors.green,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
               duration: Duration(seconds: 2),
               behavior: SnackBarBehavior.floating,
+              margin: EdgeInsets.all(10),
               ),
             );
         }
