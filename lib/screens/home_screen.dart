@@ -1,6 +1,7 @@
 //import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:myapp/widgets/expense_chart.dart';
 import 'add_expense_screen.dart';
 import '../db/database_helper.dart';
 import '../models/expense.dart';
@@ -14,6 +15,20 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<Expense> _expenses = [];
+
+  String _selectedCategory = 'Todos';
+  DateTimeRange? _selectedDateRange;
+
+  final List<String> _categories = [
+    'Todos',
+    'Comida',
+    'Transporte',
+    'Salud',
+    'Entretenimiento',
+    'Otros',
+  ];
+
+
 
   @override
   void initState() {
@@ -39,6 +54,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+    List<Expense> filteredExpenses = _expenses.where((exp) {
+  final matchesCategory = _selectedCategory == 'Todos' || exp.category == _selectedCategory;
+
+  final matchesDate = _selectedDateRange == null ||
+      (DateTime.parse(exp.date).isAfter(_selectedDateRange!.start.subtract(Duration(days: 1))) &&
+       DateTime.parse(exp.date).isBefore(_selectedDateRange!.end.add(Duration(days: 1))));
+
+  return matchesCategory && matchesDate;
+}).toList();
+
+
     return Scaffold(
       appBar: AppBar(title: Text('Mis gastos')),
       body: Padding(
@@ -58,6 +85,14 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            if (filteredExpenses.isNotEmpty) ...[
+              SizedBox(height: 20,),
+              SizedBox(
+                height: 200,
+                child: ExpenseChart(expenses: filteredExpenses),
+              ),
+              SizedBox(height: 20),
+            ],
             SizedBox(height: 10),
             Expanded(
               child:
