@@ -9,6 +9,8 @@ void main() {
 
 //Clase principal
 class GastosApp extends StatelessWidget {
+  const GastosApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp( //Widget principal, configura la app
