@@ -4,7 +4,7 @@ class Expense {
   String description;
   String category;
   double amount;
-  DateTime date;
+  String date;
 
 //Constructor
   Expense({
