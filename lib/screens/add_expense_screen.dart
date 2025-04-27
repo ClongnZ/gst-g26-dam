@@ -1,12 +1,13 @@
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; //Paquete para formatear fechas
 import '../db/database_helper.dart';
 import '../models/expense.dart';
 
-//Pantalla para agregar nuevos gastos
+//Pantalla para agregar/editar gastos
 class AddExpenseScreen extends StatefulWidget {
-  const AddExpenseScreen({super.key});
+  final Expense? expense; //Si es null = agregar gasto, si no = edición de gasto
+
+  AddExpenseScreen({this.expense}); //Constructor que recibe el gasto a editar
 
   @override
   _AddExpenseScreenState createState() => _AddExpenseScreenState();
@@ -15,8 +16,8 @@ class AddExpenseScreen extends StatefulWidget {
 class _AddExpenseScreenState extends State<AddExpenseScreen> {
   //Controladores para los campos de texto
   final _formKey = GlobalKey<FormState>();
-  final _descriptionController = TextEditingController();
-  final _amountController = TextEditingController();
+  late TextEditingController _descriptionController;
+  late TextEditingController _amountController;
   String _selectedCategory = 'Comida'; //Categoría por defecto
   DateTime _selectedDate = DateTime.now(); //Fecha por defecto
 
@@ -29,18 +30,41 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     'Otros',
   ];
 
-  //Método para guardar el gasto
+  @override
+  void initState() {
+    super.initState();
+    //Inicializa los controladores con los valores del gasto si es edición
+    _descriptionController = TextEditingController(
+      text: widget.expense?.description ?? '',
+    );
+    _amountController = TextEditingController(
+      text: widget.expense != null ? widget.expense!.amount.toString() : '',
+    );
+    _selectedCategory = widget.expense?.category ?? 'Comida';
+    _selectedDate =
+        widget.expense != null
+            ? DateFormat('yyyy-MM-dd').parse(widget.expense!.date)
+            : DateTime.now();
+  }
+
+  //Guarda o actualiza el gasto según el caso (edición/creación)
   void _submitExpense() async {
-    if (_formKey.currentState!.validate()) { //Valida los campos del formulario
-      Expense expense = Expense( //Crea un objeto Expense con los datos del formulario
+    if (_formKey.currentState!.validate()) {
+      final expense = Expense(
+        id: widget.expense?.id, //Mantiene el ID si está editando
         description: _descriptionController.text,
         category: _selectedCategory,
         amount: double.parse(_amountController.text),
         date: DateFormat('yyyy-MM-dd').format(_selectedDate),
       );
 
-      await DatabaseHelper().insertExpense(expense); //Guarda la base de datos
-      Navigator.pop(context); //Regresa a la pantalla anterior
+      //Guarda o actualiza el gasto
+      if (widget.expense == null) {
+        await DatabaseHelper().insertExpense(expense);
+      } else {
+        await DatabaseHelper().updateExpense(expense);
+      }
+      Navigator.pop(context); 
     }
   }
 
@@ -54,20 +78,19 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
     );
 
     if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked; //Actualiza la fecha
-      });
+      setState(() => _selectedDate = picked);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.expense != null; //Determina si está en modo edición
     return Scaffold(
-      appBar: AppBar(title: Text('Agregar gasto')),
+      appBar: AppBar(title: Text(isEditing ? 'Editar gasto' : 'Agregar gasto')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Form(
-          key: _formKey, 
+          key: _formKey,
           child: Column(
             children: [
               TextFormField(
@@ -80,7 +103,7 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
               TextFormField(
                 controller: _amountController,
                 decoration: InputDecoration(labelText: 'Monto'),
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
+                keyboardType: TextInputType.numberWithOptions(decimal: true), 
                 validator:
                     (value) =>
                         value!.isEmpty || double.tryParse(value) == null
@@ -123,5 +146,13 @@ class _AddExpenseScreenState extends State<AddExpenseScreen> {
         ),
       ),
     );
+  }
+
+  //Limpia los controladores al salir de la pantalla
+  @override
+  void dispose() {
+    _descriptionController.dispose();
+    _amountController.dispose();
+    super.dispose();
   }
 }
